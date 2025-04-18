@@ -111,7 +111,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       final location = await getUserCurrentLocation();
                       Get.to(() => ProductLocations(
                           latLng:
-                          LatLng(location.latitude, location.longitude)));
+                          LatLng(location.latitude, location.longitude)),transition: Transition.fade,duration: Duration(seconds: 1));
                     },
                   ),
                 ),
