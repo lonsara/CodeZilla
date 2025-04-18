@@ -1,3 +1,4 @@
+import 'package:codezilla/src/utils/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -16,14 +17,29 @@ class ProductListScreen extends StatefulWidget {
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
+  bool isPermissionDenied=false;
   final ProductController productController = Get.put(ProductController());
 
   Future<Position> getUserCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
+      showDialog(context: context, builder: (context){
+        return AlertDialog(
+         content: Text('Allow location Permission'),
+          actions: [
+            TextButton(onPressed: (){
+              Navigator.pop(context);
+            }, child: const Text('Cancel')),
+            TextButton(onPressed: ()async{
+              await Geolocator.openLocationSettings();
+              Navigator.pop(context);
+
+            }, child: Text('Allow'))
+          ],
+        );
+      });
       return Future.error('Location services are disabled.');
     }
-
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -40,11 +56,20 @@ class _ProductListScreenState extends State<ProductListScreen> {
   }
 
   Future<void> permissions() async {
-    PermissionStatus locationStatus = await Permission.location.request();
-    if (locationStatus.isPermanentlyDenied) {
+    PermissionStatus status = await Permission.location.request();
+
+    if (status.isPermanentlyDenied) {
+      isPermissionDenied=true;
       await openAppSettings();
+    } else if (status.isDenied) {
+      await Geolocator.openLocationSettings();
+    } else if (status.isGranted) {
+      debugPrint("Location permission granted ");
+    } else if (status.isRestricted) {
+      debugPrint("Location permission is restricted ");
     }
   }
+
 
   @override
   void initState() {
@@ -108,10 +133,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   trailing: CustomBtn(
                     label: const Icon(Icons.directions, size: 24),
                     onTap: () async {
+                      if(isPermissionDenied){
+                        isPermissionDenied=false;
+                        return await openAppSettings();
+                      }
                       final location = await getUserCurrentLocation();
-                      Get.to(() => ProductLocations(
-                          latLng:
-                          LatLng(location.latitude, location.longitude)),transition: Transition.fade,duration: Duration(seconds: 1));
+                      Get.toNamed(RoutesClass.getProductLocations(),arguments: LatLng(location.longitude, location.latitude));
                     },
                   ),
                 ),

@@ -21,7 +21,7 @@ class _ProductLocationsState extends State<ProductLocations> {
 
   final CameraPosition initialCameraPosition = const CameraPosition(
     target: LatLng(22.7162593, 75.8663183),
-    zoom: 12,
+    zoom: 10,
   );
 
   Set<Polyline> _polyline = {};
